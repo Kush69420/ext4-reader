@@ -1,0 +1,10 @@
+# ext4 Reader — Python dependencies
+# Core GUI — tkinter is built-in, no extras needed for basic use.
+# Optional but recommended:
+#   pyinstaller — for bundling to .exe on Windows
+
+# No third-party runtime dependencies required!
+# (tkinter ships with Python on all platforms)
+
+# ----- Dev / build only -----
+# pyinstaller>=6.0
