@@ -218,6 +218,16 @@ class Ext4Volume:
         if not inode.is_dir:
             raise ValueError(f"Inode {inode_num} is not a directory")
         entries = []
+
+        if inode.flags & 0x10000000:  # EXT4_INLINE_DATA_FL
+            # Directory entries are packed directly into the 60-byte i_block
+            # area (and optionally overflow into a system.data xattr block,
+            # which we don't parse here — covers the common small-dir case).
+            raw = inode.block_data[:inode.size]
+            for entry in parse_dir_block(raw, self.sb.has_filetype):
+                entries.append(entry)
+            return entries
+
         for block_data in self._iter_inode_blocks(inode):
             for entry in parse_dir_block(block_data, self.sb.has_filetype):
                 entries.append(entry)

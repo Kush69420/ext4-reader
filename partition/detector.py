@@ -110,16 +110,6 @@ def detect_partitions(stream: BinaryIO, sector_size: int = 512) -> List[Partitio
 
 
 def _size_str(n: int) -> str:
-    for unit in ("B", "KB", "MB", "GB", "TB"):
-        if n < 1024 or unit == "TB":
-            v = n if unit == "B" else n / 1024 ** ["B","KB","MB","GB","TB"].index(unit)
-            return f"{v:.1f} {unit}"
-        n = n  # just iterate
-    return str(n)
-
-
-# Fix the size_str helper — simpler version
-def _size_str(n: int) -> str:
     for unit, divisor in [("TB", 2**40), ("GB", 2**30), ("MB", 2**20), ("KB", 2**10)]:
         if n >= divisor:
             return f"{n / divisor:.1f} {unit}"

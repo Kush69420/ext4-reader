@@ -148,24 +148,24 @@ class App(tk.Tk):
         self._file_panel.load_directory(inode_num, self._inode_path(inode_num))
 
     def _inode_path(self, inode_num: int) -> str:
-        """Best-effort path from currently selected tree node."""
+        """Reconstruct path for the currently focused tree node.
+
+        Names are stored in values[1] of each node (set by tree_panel.py),
+        so we don't need to parse or strip the display text at all.
+        """
         tree = self._tree_panel.tree
         node = tree.focus()
         if not node:
             return "/"
-        # Walk up the tree to build path
         parts = []
         current = node
         while current:
-            text = tree.item(current, "text").strip()
-            # Remove icon prefix
-            text = text.lstrip("📁 ").strip()
-            if text and text != "/":
-                parts.append(text)
-            parent = tree.parent(current)
-            if not parent:
-                break
-            current = parent
+            values = tree.item(current, "values")
+            # values = (inode_str, name) — root has empty name
+            name = values[1] if len(values) >= 2 else ""
+            if name:
+                parts.append(name)
+            current = tree.parent(current)
         parts.reverse()
         return "/" + "/".join(parts) if parts else "/"
 

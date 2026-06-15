@@ -7,7 +7,6 @@ Reference: https://ext4.wiki.kernel.org/index.php/Ext4_Disk_Layout#Block_Group_D
 import struct
 from dataclasses import dataclass
 
-# 32-byte descriptor
 # 32-byte block group descriptor
 # Fields: bb_lo, ib_lo, it_lo, free_blocks_lo, free_inodes_lo,
 #         used_dirs_lo, flags, exclude_bitmap_lo, bb_csum, ib_csum,
@@ -15,11 +14,15 @@ from dataclasses import dataclass
 _BGD32_FMT = "<IIIHHHHIHHHh"
 _BGD32_SIZE = struct.calcsize(_BGD32_FMT)  # 32 bytes
 
-# 64-byte descriptor — only the extra 32 bytes (hi words)
-_BGD64_EXTRA_FMT = "<IIIHHIH"
-# (bg_block_bitmap_hi, bg_inode_bitmap_hi, bg_inode_table_hi,
-#  bg_free_blocks_count_hi, bg_free_inodes_count_hi,
-#  bg_used_dirs_count_hi, bg_itable_unused_hi)
+# 64-bit extension fields (bytes 32-53 of the 64-byte descriptor):
+#   offset 32: bg_block_bitmap_hi     (I = 4 bytes)
+#   offset 36: bg_inode_bitmap_hi     (I = 4 bytes)
+#   offset 40: bg_inode_table_hi      (I = 4 bytes)
+#   offset 44: bg_free_blocks_count_hi(H = 2 bytes)
+#   offset 46: bg_free_inodes_count_hi(H = 2 bytes)
+#   offset 48: bg_used_dirs_count_hi  (H = 2 bytes)  <-- was wrong I (4 bytes)
+#   offset 50: bg_itable_unused_hi    (H = 2 bytes)
+_BGD64_EXTRA_FMT = "<IIIHHHH"
 _BGD64_EXTRA_SIZE = struct.calcsize(_BGD64_EXTRA_FMT)
 
 

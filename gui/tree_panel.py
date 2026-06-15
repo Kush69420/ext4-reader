@@ -65,11 +65,11 @@ class TreePanel(tk.Frame):
         self._volume = volume
         self.tree.delete(*self.tree.get_children())
 
-        # Root node
+        # Root node — inode=2, name is empty (represents "/")
         root_id = self.tree.insert(
             "", "end",
             text="  📁  /",
-            values=("2",),   # inode 2 = root
+            values=("2", ""),   # (inode, name) — empty name = root
             open=False,
         )
         # Add placeholder so expand arrow shows
@@ -120,7 +120,7 @@ class TreePanel(tk.Frame):
             child_id = self.tree.insert(
                 node, "end",
                 text=f"  📁  {entry.name}",
-                values=(str(entry.inode),),
+                values=(str(entry.inode), entry.name),  # (inode, name)
             )
             # Check if this subdir has further children
             try:
