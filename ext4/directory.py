@@ -56,7 +56,7 @@ def parse_dir_block(data: bytes, has_filetype: bool = True) -> Iterator[DirEntry
     offset = 0
     size = len(data)
 
-    while offset < size - _DIRENT_SIZE:
+    while offset + _DIRENT_SIZE <= size:
         inode, rec_len, name_len, file_type_raw = struct.unpack_from(_DIRENT_FMT, data, offset)
 
         if rec_len == 0:

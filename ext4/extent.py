@@ -20,12 +20,14 @@ _EH_FMT  = "<HHHHI"
 _EH_SIZE = struct.calcsize(_EH_FMT)  # 12
 EXT4_EXT_MAGIC = 0xF30A
 
-# Leaf extent (12 bytes)
-_EXT_FMT  = "<IHHHI"
+# Leaf extent — ext4_extent (12 bytes):
+#   ee_block(I=4)  ee_len(H=2)  ee_start_hi(H=2)  ee_start_lo(I=4)
+_EXT_FMT  = "<IHHI"
 _EXT_SIZE = struct.calcsize(_EXT_FMT)  # 12
 
-# Index node (12 bytes)
-_IDX_FMT  = "<IIIH2x"
+# Index node — ext4_extent_idx (12 bytes):
+#   ei_block(I=4)  ei_leaf_lo(I=4)  ei_leaf_hi(H=2)  ei_unused(H=2)
+_IDX_FMT  = "<IIH2x"
 _IDX_SIZE = struct.calcsize(_IDX_FMT)  # 12
 
 
@@ -36,18 +38,18 @@ def _parse_header(data: bytes, offset: int) -> Tuple[int, int, int, int, int]:
 
 def _parse_leaf(data: bytes, offset: int) -> Tuple[int, int, int]:
     """Returns (logical_block, length, physical_block)."""
-    ee_block, ee_len, ee_start_hi, ee_start_lo = struct.unpack_from(_EXT_FMT, data, offset)[:4]
-    # ee_start is a 48-bit block number
+    ee_block, ee_len, ee_start_hi, ee_start_lo = struct.unpack_from(_EXT_FMT, data, offset)
+    # ee_start is a 48-bit block number: hi(16-bit) | lo(32-bit)
     phys = (ee_start_hi << 32) | ee_start_lo
-    # High bit of ee_len signals uninitialized extent (kernel uses it)
+    # High bit of ee_len signals an uninitialized (prealloc) extent
     length = ee_len & 0x7FFF
     return ee_block, length, phys
 
 
 def _parse_index(data: bytes, offset: int) -> Tuple[int, int]:
     """Returns (logical_block, leaf_physical_block)."""
-    ei_block, ei_leaf_lo, ei_leaf_hi, _ = struct.unpack_from(_IDX_FMT, data, offset)
-    leaf = (ei_leaf_hi << 32) | ei_leaf_lo
+    ei_block, ei_leaf_lo, ei_leaf_hi = struct.unpack_from(_IDX_FMT, data, offset)
+    leaf = (int(ei_leaf_hi) << 32) | ei_leaf_lo
     return ei_block, leaf
 
 
@@ -86,18 +88,19 @@ def collect_blocks(block_data: bytes, read_block_fn) -> List[int]:
     Return ordered list of physical block numbers for a file.
     Holes (sparse files) are represented as block number 0.
     """
-    extents = sorted(iter_extents(block_data, read_block_fn), key=lambda x: x[0])
+    extents = list(iter_extents(block_data, read_block_fn))
     if not extents:
         return []
 
-    # Find total logical block span
-    last = extents[-1]
-    total = last[0] + last[2]
+    # Find the true highest logical block end across ALL extents.
+    # Sorting by lblock alone does NOT guarantee the last entry has
+    # the highest lblock+length (fragmented files can have non-contiguous
+    # extents where an earlier logical start has a longer run).
+    total = max(lblock + length for lblock, _pblock, length in extents)
     blocks: List[int] = [0] * total
 
     for lblock, pblock, length in extents:
         for i in range(length):
-            if lblock + i < total:
-                blocks[lblock + i] = pblock + i
+            blocks[lblock + i] = pblock + i
 
     return blocks

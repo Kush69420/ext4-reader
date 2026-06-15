@@ -137,16 +137,6 @@ class Ext4Volume:
 
         yielded = 0
 
-        def _yield_block(bn: int):
-            nonlocal yielded
-            if yielded >= num_blocks:
-                return
-            if bn == 0:
-                yield b"\x00" * self.block_size
-            else:
-                yield self._read_block(bn)
-            yielded += 1
-
         # Direct blocks
         for i in range(12):
             if yielded >= num_blocks:
