@@ -12,7 +12,6 @@ A pure-Python ext4 filesystem explorer that runs on **Windows** (and Linux) with
 - 📄 **Extract files** — single file or bulk extract with background thread
 - 🔗 **Symlink display** — shows link targets
 - 🔍 **File properties** — permissions, UID/GID, timestamps, inode number
-- 🌑 **Dark theme** — GitHub-style dark UI
 
 ## What's Supported
 
@@ -60,31 +59,6 @@ Output: `dist\ext4Reader.exe` — a single portable executable.
 6. Browse the directory tree on the left
 7. Click files in the right panel — use **Extract…** to copy them out
 
-## Project Structure
-
-```
-ext4 reader/
-├── main.py             Entry point
-├── ext4/
-│   ├── superblock.py   Superblock parser
-│   ├── block_group.py  Block Group Descriptor
-│   ├── inode.py        Inode parser
-│   ├── extent.py       Extent tree traversal
-│   ├── directory.py    Directory entry parser
-│   └── volume.py       Main Ext4Volume class
-├── partition/
-│   ├── mbr.py          MBR partition table
-│   ├── gpt.py          GPT partition table
-│   └── detector.py     Auto-detect + ext4 validation
-├── gui/
-│   ├── theme.py        Dark theme + ttk styles
-│   ├── app.py          Main window
-│   ├── sidebar.py      Disk selector + volume info
-│   ├── tree_panel.py   Directory tree widget
-│   └── file_panel.py   File list + extract
-├── requirements.txt    No runtime deps!
-└── build.bat           Windows PyInstaller build
-```
 
 ## License
 
